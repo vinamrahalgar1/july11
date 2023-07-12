@@ -1,125 +1,123 @@
-import React, { Component } from "react";
-import { Text, View,StyleSheet,Button,Modal,Pressable ,Icon} from 'react-native';
-import { Provider ,Appbar, Avatar,TextInput } from 'react-native-paper';
+import React, { useState } from "react";
+import { Text, View, StyleSheet, Button, Modal, Pressable, FlatList } from 'react-native';
+import { Provider, Appbar, TextInput } from 'react-native-paper';
 
 const MYComponent = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [email, setEmail] = useState('');
+  const [dataList, setDataList] = useState([]);
 
-  const [modalVisible, setModalVisible] = React.useState(false);
-
-  const [firstName, setFirstNameText] = React.useState('');
-
-  const [lastName, setLastNameText] = React.useState('');
-  
-  const [email, setEmailText] = React.useState('');
-
-  const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ first_name:firstName,last_name:lastName,email:email })
-    };
+  const apiEndpoint = 'https://api.mywebtuts.com/api/users';
 
   const handleClick = async () => {
-     fetch('https://api.mywebtuts.com/api/users', requestOptions)
-        .then(response => response.json())
-        .then(data => console.log(data));
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ first_name: firstName, email: email })
+    };
+
+    fetch(apiEndpoint, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        setModalVisible(true); 
+        setDataList([...dataList, { firstName: firstName, email: email }]); 
+        setFirstName(''); 
+        setEmail('');
+      });
   };
 
-  const _goBack = () => console.log('Went back');
-
-  const _handleSearch = () => console.log('Searching');
-
-  const _handleMore = () => console.log('Shown more');
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
   return (
     <Provider>
-    <Appbar.Header style={styles.header}>
-      <Appbar.BackAction onPress={_goBack} />
-      <Appbar.Content title="Welcome" />
-      <Appbar.Action icon="magnify" onPress={_handleSearch} />
-      <Appbar.Action icon="dots-vertical" onPress={_handleMore} />
-    </Appbar.Header>
+      <Appbar.Header style={styles.header}>
+        <Appbar.Content title="Welcome" />
+      </Appbar.Header>
       <View style={styles.mainbox}>
-         <Text style={styles.labelText}>Fist Name:</Text>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter First Name"
-            onChangeText={firstName => setFirstNameText(firstName)}
-            defaultValue={firstName}
-          />
-           <Text style={styles.labelText}>Last Name:</Text>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter Last Name"
-            onChangeText={lastName => setLastNameText(lastName)}
-            defaultValue={lastName}
-          />
-          <Text style={styles.labelText}>Email:</Text>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter Email"
-            onChangeText={email => setEmailText(email)}
-            defaultValue={email}
-          />
-          <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => {
-                Alert.alert("Modal has been closed.");
-                setModalVisible(!modalVisible);
-              }}
-            >
-              <View style={styles.centeredView}>
-                <View style={styles.modalView}>
-                  <Text style={styles.modalText}>User Create Successfully</Text>
-                  <Pressable
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={() => setModalVisible(!modalVisible)}
-                  >
-                    <Text style={styles.textStyle}>Close</Text>
-                  </Pressable>
+        <Text style={styles.labelText}>First Name:</Text>
+        <TextInput
+          style={styles.inputText}
+          placeholder="Enter First Name"
+          onChangeText={firstName => setFirstName(firstName)}
+          value={firstName}
+        />
+        <Text style={styles.labelText}>Email:</Text>
+        <TextInput
+          style={styles.inputText}
+          placeholder="Enter Email"
+          onChangeText={email => setEmail(email)}
+          value={email}
+        />
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(false);
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalText}>User Created Successfully:</Text>
+              <Text style={styles.modalText}>Name: {firstName}</Text>
+              <Text style={styles.modalText}>Email: {email}</Text>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={closeModal}
+              >
+                <Text style={styles.textStyle}>Close</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+        <Button
+          title="Submit"
+          onPress={handleClick}
+          color="#6200EE"
+        />
+        <View style={styles.dataListContainer}>
+          <Text style={styles.dataListTitle}>All Inputs:</Text>
+          {dataList.length > 0 ? (
+            <FlatList
+              data={dataList}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.dataListItem}>
+                  <Text>{`Name: ${item.firstName}`}</Text>
+                  <Text>{`Email: ${item.email}`}</Text>
                 </View>
-              </View>
-            </Modal>
-           <Button
-            title="Submit"
-            onPress={() => handleClick(this)} 
-            onPress={() => setModalVisible(true)}                                 
-            style={styles.buttonstyle}
-            color="#6200EE"
-          />
+              )}
+            />
+          ) : (
+            <Text>No inputs yet</Text>
+          )}
+        </View>
       </View>
     </Provider>
   );
 };
 
-
 const styles = StyleSheet.create({
-  title:{
-    margin: 10,
-    fontSize: 15,
-    fontSize: 35
+  header: {
+    backgroundColor: '#6200EE',
   },
-  mainbox:{
-    textAlign:'center',
+  mainbox: {
+    textAlign: 'center',
     margin: 15,
   },
-  textstyle:{
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  labelText:{
+  labelText: {
     marginTop: 10,
     marginBottom: 5,
   },
-  inputText:{
-    height:45,
+  inputText: {
+    height: 45,
     marginBottom: 15,
   },
-  buttonstyle:{
-    marginTop: 10,
-  },
-    centeredView: {
+  centeredView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -129,13 +127,13 @@ const styles = StyleSheet.create({
     margin: 20,
     backgroundColor: "#ffffff",
     borderRadius: 20,
-    padding: 20 ,
+    padding: 20,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2
-  },
+    },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 6
@@ -156,6 +154,21 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: "center",
-  }
+  },
+  dataListContainer: {
+    marginTop: 20,
+  },
+  dataListTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  dataListItem: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 4,
+  },
 });
+
 export default MYComponent;
